@@ -4,6 +4,16 @@
 #include <iostream>
 #include "glew.h"
 #include "glfw3.h"
+#include "..//glm/glm.hpp"
+
+//Test:
+#include "Ray.h"
+#include "hitable.h"
+#include "Sphere.h"
+#include "..\\glm\gtx\string_cast.hpp"
+
+
+
 
 const GLint WIDTH = 800, HEIGHT = 600;
 
@@ -72,6 +82,22 @@ int main()
 		glfwSwapBuffers(mainWindow);
 
 	}
+
+	//TEST INTERSECTION RAY->SPHERE
+	/*glm::vec3 rayO = glm::vec3(1.f, -2.f, -1.f);
+	glm::vec3 rayD = glm::normalize(glm::vec3(1.f, 2.f, 4.f));
+	Ray raza(rayO, rayD);
+	hit_record record;
+	Sphere ball(glm::vec3(3.f, 0.f, 5.f), 3);
+	if (ball.hit(raza, record))
+	{
+		std::cout << "Punctul de intersectie: " << glm::to_string(record.intersectPoint) << std::endl;
+		std::cout << "Valoarea lui t : " << record.t << std::endl;
+		std::cout << "Valoarea Normalei : " << glm::to_string(record.intersectNormal) << std::endl;
+	}
+	else
+		std::cout << "Nu intersecteaza .\n";*/
+
 
 
 
