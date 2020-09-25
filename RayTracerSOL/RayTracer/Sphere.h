@@ -1,8 +1,8 @@
 #pragma once
-#include "..\\glm\ext\vector_float3.hpp"
 //#include "..\\glm\glm.hpp"
 #include "..\\glm\exponential.hpp"
 #include "..\glm\common.hpp"
+#include "..\glm\vec3.hpp"
 #include "hitable.h"
 
 class Sphere: public hitable

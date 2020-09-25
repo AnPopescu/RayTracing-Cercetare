@@ -84,8 +84,8 @@ int main()
 	}
 
 	//TEST INTERSECTION RAY->SPHERE
-	/*glm::vec3 rayO = glm::vec3(1.f, -2.f, -1.f);
-	glm::vec3 rayD = glm::normalize(glm::vec3(1.f, 2.f, 4.f));
+	glm::vec3 rayO = glm::vec3(1.f, -2.f, -1.f);
+	glm::vec3 rayD = glm::vec3(1.f, 2.f, 4.f);
 	Ray raza(rayO, rayD);
 	hit_record record;
 	Sphere ball(glm::vec3(3.f, 0.f, 5.f), 3);
@@ -96,7 +96,7 @@ int main()
 		std::cout << "Valoarea Normalei : " << glm::to_string(record.intersectNormal) << std::endl;
 	}
 	else
-		std::cout << "Nu intersecteaza .\n";*/
+		std::cout << "Nu intersecteaza .\n";
 
 
 
