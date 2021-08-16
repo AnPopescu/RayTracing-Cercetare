@@ -2,86 +2,132 @@
 //
 
 #include <iostream>
-#include "glew.h"
 #include "glfw3.h"
 #include "..//glm/glm.hpp"
+#include "GLWrapper.h"
+
 
 //Test:
 #include "Ray.h"
 #include "hitable.h"
 #include "Sphere.h"
+#include "Cuboid.h"
+#include "ElipticCylinder.h"
 #include "..\\glm\gtx\string_cast.hpp"
 
 
+//GEN TEXTURE IMAGE  TEST
+
+#define checkImageWidth 128
+#define checkImageHeight 128
+static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
+
+static GLuint texName;
+
+void makeCheckImage(void)
+{
+	int i, j, c;
+
+	for (i = 0; i < checkImageHeight; i++)
+	{
+		for (j = 0; j < checkImageWidth; j++)
+		{
+			c = ((((i & 0x8) == 0) ^ ((j & 0x8)) == 0)) * 255;
+			checkImage[i][j][0] = (GLubyte)255;
+			checkImage[i][j][1] = (GLubyte)c;
+			checkImage[i][j][2] = (GLubyte)255;
+			checkImage[i][j][3] = (GLubyte)255;
+		}
+	}
+}
 
 
-const GLint WIDTH = 800, HEIGHT = 600;
+
+
+
+
+ GLint WIDTH = 800, HEIGHT = 600;
 
 int main()
 {	
-	//Initializare GLFW
-	if (!glfwInit())
-	{
-		std::cout << "Initializare esuata pentru GLFW.";
-		glfwTerminate();
-		return 1;
-	}
+	GLWrapper glWrapper(WIDTH, HEIGHT);
+	glWrapper.InitWindow();
+	glfwSwapInterval(1);
 
-    //Seteaza Propietatea Fereasta
-	// Versiunea OpenGL
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	// Core Profile = nu e compatibil cu versiunile vechi
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	WIDTH = glWrapper.GetWidth();
+	HEIGHT = glWrapper.GetHeight();
 
-	GLFWwindow* mainWindow = glfwCreateWindow(WIDTH, HEIGHT, "Test Window", NULL, NULL);
+	// fix ray direction
+	if (WIDTH % 2 == 1) WIDTH++;
+	if (HEIGHT % 2 == 1) HEIGHT++;
 
-	if (!mainWindow)
-	{
-		std::cout << "Crearea Ferestrei a esuat. \n";
-		glfwTerminate();
-		return 1;
-	}
+	Shader simpleSH("Simple.vs", "Simple.fs");
+	glWrapper.InitShader(&simpleSH);
 
-	//Gaseste dimensiunea bufferului de fereastra
+	Cuboid box(glm::vec3(1.0f, 2.3f, 10.0f), glm::vec3(2.3f, 11.9f, 14.0f));
 
-	int bufferWidth, bufferHeight;
-	glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
+	makeCheckImage();
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	glGenTextures(1, &texName);
+	glBindTexture(GL_TEXTURE_2D, texName);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+		GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+		GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth,
+		checkImageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		checkImage);
 
 
-	//Seteaza contextul pentru GLEW -> Unde se deseneaza ceva; -> Daca ai mai multe ferestre poti sa schimbi intre ele
-	glfwMakeContextCurrent(mainWindow);
+	//TODO Scene Manager time
+	//TODO Create Scene
 
-	//Permite extensii moderne
-	glewExperimental = GL_TRUE;
+	//TODO replace defines;
 
-	if (glewInit()!= GLEW_OK)
-	{
-		std::cout << "Initializare GLEW esuata. \n";
-		glfwDestroyWindow(mainWindow);
-		glfwTerminate();
-		return 1;
-	}
 
-	//Seteaza Viewportul (unde sa deseneze)?
-	glViewport(0, 0, bufferWidth, bufferHeight);
+	//Setting Skybox
+	//std::vector<std::string> faces =
+	//{
+	//	"Textures/CubeMap/GalaxyTex_PositiveX.jpg",
+	//	"Textures/CubeMap/GalaxyTex_NegativeX.jpg",
+	//	"Textures/CubeMap/GalaxyTex_PositiveY.jpg",
+	//	"Textures/CubeMap/GalaxyTex_NegativeY.jpg",
+	//	"Textures/CubeMap/GalaxyTex_PositiveZ.jpg",
+	//	"Textures/CubeMap/GalaxyTex_NegativeZ.jpg"
+	//};
+
+	//glWrapper.SetSkybox(GLWrapper::LoadCubemap(faces, false));
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //wireframe mode
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // revert wireframe mode
 
 	//Loop pana la inchiderea ferestrei
 
-	while (!glfwWindowShouldClose(mainWindow))
+
+
+	while (!glfwWindowShouldClose(glWrapper.WindowScreen))
 	{
 		//Get + Handle User Input
 		glfwPollEvents();
 
 		//Curata Fereastra
-		glClearColor(0.0f,1.0f,0.0f,1.0f);
+		//glClearColor(50.f,255,255,0.0f);
+		//glWrapper.InitShader(&simpleSH);
 
-		glClear(GL_COLOR_BUFFER_BIT);
+		glWrapper.Draw();
 
-		glfwSwapBuffers(mainWindow);
+
+		glfwSwapBuffers(glWrapper.WindowScreen);
 
 	}
+
+
+
 
 	//TEST INTERSECTION RAY->SPHERE
 	glm::vec3 rayO = glm::vec3(1.f, -2.f, -1.f);
@@ -98,6 +144,28 @@ int main()
 	else
 		std::cout << "Nu intersecteaza .\n";
 
+	//TEST INTERSECTION RAY->CUBOID
+
+	rayO = glm::vec3(0.f,4.f,2.f);
+	rayD = glm::vec3(0.218f,-0.436f,0.873f);
+	glm::vec3 smallCorner = glm::vec3(-1.f, 2.f, 1.f);
+	glm::vec3 bigCorner = glm::vec3(3.f, 3.f, 3.f);
+	Cuboid testCube(smallCorner, bigCorner);
+	HitInfo hit_info;
+	std::cout<<"\n Ray intersects cube: "<<std::boolalpha<<testCube.TestIntersection(rayO, rayD, hit_info);
+
+
+	//TEST INTERSECTION RAY->CYLINDER
+
+	ElipticCylinder c1(2,1,2);
+	//rayO = glm::vec3(1.f, 0.f, -5.f);
+	//rayD = glm::vec3(0.f, 0.f, 1.f);
+	//c1.TestIntersection(rayO, rayD, hit_info);
+	rayO = glm::vec3(0.5f, 0.0f, -5.0f);
+	rayD = glm::vec3(0.1f, 1.0f, 1.0f);
+	
+	c1.TestIntersection(rayO, glm::normalize(rayD), hit_info);
+	
 
 
 

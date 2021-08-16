@@ -14,5 +14,6 @@ class Sphere: public hitable
 	Sphere(glm::vec3 center, float radius):center(center),radius(radius){}
 
 	bool hit(const Ray& r, hit_record &rec);
+	void sphereTxtMapping(glm::vec3 normal, glm::vec3 intersectPoint);
 };
 
