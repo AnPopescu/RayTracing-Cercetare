@@ -7,6 +7,8 @@
 #include "GLWrapper.h"
 
 
+#include "CameraFPS.h"
+
 //Test:
 #include "Ray.h"
 #include "hitable.h"
@@ -41,8 +43,55 @@ void makeCheckImage(void)
 	}
 }
 
+void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 
+//Camera
+CameraFPS cameraGLB(glm::vec3(0.0f, 0.0f, 0.3f));
+float lastX = checkImageWidth / 2.0f;
+float lastY = checkImageHeight / 2.0f;
+bool  firstMouse = true;
+float fov = 45.0f;
 
+float moveOnX = 0.0;
+float moveOnZ = 0.0;
+float moveOnY = 0.0;
+
+void MakeCheckImage(CameraFPS& camera)
+{
+	int i, j, c;
+
+	for (i = 0; i < checkImageHeight; i++)
+	{
+		for (j = 0; j < checkImageWidth; j++)
+		{
+			//c = ((((i & 0x8) == 0) ^ ((j & 0x8)) == 0)) * 255;
+			
+			checkImage[i][j][0] = (camera.cameraFront.x * 255);
+			checkImage[i][j][1] = (camera.cameraFront.y * 255);
+			checkImage[i][j][2] = (camera.cameraFront.z * 255);
+			checkImage[i][j][3] = (GLubyte)255;
+
+			//std::cout << "R: " << (int)checkImage[i][j][0] << " G: " << (int)checkImage[i][j][0] << " B: " << (int)checkImage[i][j][0] << std::endl;
+		}
+	}
+}
+void RebuildTextureBuffer()
+{
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	//glGenTextures(1, &texName);
+	glBindTexture(GL_TEXTURE_2D, texName);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+		GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+		GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth,
+		checkImageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		checkImage);
+}
 
 
 
@@ -84,6 +133,8 @@ int main()
 		checkImage);
 
 
+	glfwSetCursorPosCallback(glWrapper.WindowScreen, mouseCallback);
+
 	//TODO Scene Manager time
 	//TODO Create Scene
 
@@ -113,15 +164,19 @@ int main()
 	while (!glfwWindowShouldClose(glWrapper.WindowScreen))
 	{
 		//Get + Handle User Input
-		glfwPollEvents();
+		
 
 		//Curata Fereastra
 		//glClearColor(50.f,255,255,0.0f);
 		//glWrapper.InitShader(&simpleSH);
 
+		MakeCheckImage(cameraGLB);
+		RebuildTextureBuffer();
+
+
 		glWrapper.Draw();
 
-
+		glfwPollEvents();
 		glfwSwapBuffers(glWrapper.WindowScreen);
 
 	}
@@ -169,6 +224,27 @@ int main()
 
 
 
+}
+
+void mouseCallback(GLFWwindow* window, double xpos, double ypos)
+{	
+	if (firstMouse) // initially set to true
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
+	lastX = xpos;
+	lastY = ypos;
+
+	cameraGLB.ProcessMouseMovement(xoffset, yoffset);
+	//std::cout << "CameraFront: " << glm::to_string(cameraGLB.cameraFront) << std::endl;
+
+	//std::cout << "XPos: " << xpos << std::endl;
+	//std::cout << "YPos: " << ypos;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
